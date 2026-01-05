@@ -150,7 +150,7 @@ export function VirtualTryOn({ onClose }: VirtualTryOnProps) {
     const rightEar = keypoints.find((k) => k.name === "right_ear");
 
     // Only draw if we have high confidence in keypoints
-    const minConfidence = 0.5;
+    const minConfidence = 0.4;
     if (
       leftShoulder && leftShoulder.score! > minConfidence &&
       rightShoulder && rightShoulder.score! > minConfidence &&
@@ -166,16 +166,12 @@ export function VirtualTryOn({ onClose }: VirtualTryOnProps) {
       const hasLeftEar = leftEar && leftEar.score! > minConfidence;
       const hasRightEar = rightEar && rightEar.score! > minConfidence;
       
-      const facePoints = [hasNose, hasLeftEye, hasRightEye, hasLeftEar, hasRightEar].filter(Boolean).length;
+      const facePointsCount = [hasNose, hasLeftEye, hasRightEye].filter(Boolean).length;
+      const earPointsCount = [hasLeftEar, hasRightEar].filter(Boolean).length;
 
-      // 1. Check for profile first (high ear confidence vs low other ear)
-      if (hasLeftEar && !hasRightEar && leftEar!.score! > 0.6) {
-        detectedView = 'left';
-      } else if (hasRightEar && !hasLeftEar && rightEar!.score! > 0.6) {
-        detectedView = 'right';
-      } 
-      // 2. Check for front (visible facial features)
-      else if (facePoints >= 2) {
+      // Logic:
+      // 1. If we see eyes or nose clearly, it's NOT the back.
+      if (facePointsCount >= 1) {
         const shoulderCenter = (leftShoulder.x + rightShoulder.x) / 2;
         const shoulderWidth = Math.abs(rightShoulder.x - leftShoulder.x);
         
@@ -183,14 +179,23 @@ export function VirtualTryOn({ onClose }: VirtualTryOnProps) {
           const noseX = nose!.x;
           const noseOffset = (noseX - shoulderCenter) / (shoulderWidth / 2);
           
-          if (noseOffset > 0.5) detectedView = 'right';
-          else if (noseOffset < -0.5) detectedView = 'left';
+          // Use a narrower range for front to allow easier switching
+          if (noseOffset > 0.4) detectedView = 'right';
+          else if (noseOffset < -0.4) detectedView = 'left';
           else detectedView = 'front';
         } else {
           detectedView = 'front';
         }
       } 
-      // 3. Fallback to back view
+      // 2. If no face points but we see one ear significantly better than the other, it's a side profile.
+      else if (earPointsCount === 1) {
+        detectedView = hasLeftEar ? 'left' : 'right';
+      }
+      // 3. If we see both ears but no face points, it's likely the back.
+      else if (earPointsCount === 2) {
+        detectedView = 'back';
+      }
+      // 4. Default to back if nothing is visible.
       else {
         detectedView = 'back';
       }
