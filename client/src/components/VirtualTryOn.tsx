@@ -336,7 +336,14 @@ export function VirtualTryOn({ onClose }: VirtualTryOnProps) {
     const leftEye = keypoints.find((k) => k.name === "left_eye");
     const rightEye = keypoints.find((k) => k.name === "right_eye");
 
-    if (nose && leftEye && rightEye && nose.score! > 0.3 && leftEye.score! > 0.3 && rightEye.score! > 0.3) {
+    // Only draw face lines if we have high confidence (prevents detection of back of head)
+    const faceConfidence = 0.5;
+    if (
+      nose && leftEye && rightEye && 
+      nose.score! > faceConfidence && 
+      leftEye.score! > faceConfidence && 
+      rightEye.score! > faceConfidence
+    ) {
       ctx.beginPath();
       ctx.moveTo(leftEye.x, leftEye.y);
       ctx.lineTo(nose.x, nose.y);
