@@ -33,7 +33,7 @@ export default function ProductDetail() {
   // Use the actual product data from the hook
   const { data: fetchedProduct } = useProduct(Number(id));
   
-  const product = (fetchedProduct as Product) || {
+  const product = (fetchedProduct as any) || {
     id: 1,
     name: TSHIRT_CONFIG.name,
     price: TSHIRT_CONFIG.price,

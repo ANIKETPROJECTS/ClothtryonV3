@@ -130,6 +130,9 @@ export function VirtualTryOn({ onClose }: VirtualTryOnProps) {
     const rightShoulder = keypoints.find((k) => k.name === "right_shoulder");
     const leftHip = keypoints.find((k) => k.name === "left_hip");
     const rightHip = keypoints.find((k) => k.name === "right_hip");
+    const nose = keypoints.find((k) => k.name === "nose");
+    const leftEar = keypoints.find((k) => k.name === "left_ear");
+    const rightEar = keypoints.find((k) => k.name === "right_ear");
 
     // Only draw if we have high confidence in keypoints
     const minConfidence = 0.3;
@@ -139,6 +142,29 @@ export function VirtualTryOn({ onClose }: VirtualTryOnProps) {
       leftHip && leftHip.score! > minConfidence &&
       rightHip && rightHip.score! > minConfidence
     ) {
+      // Determine Orientation automatically
+      let detectedView: 'front' | 'back' | 'left' | 'right' = 'front';
+      
+      if (nose && nose.score! > minConfidence) {
+        // We can see the face, so it's likely front, left, or right
+        const shoulderWidth = Math.abs(rightShoulder.x - leftShoulder.x);
+        const noseOffset = nose.x - (leftShoulder.x + rightShoulder.x) / 2;
+        
+        if (Math.abs(noseOffset) > shoulderWidth * 0.2) {
+          detectedView = noseOffset > 0 ? 'right' : 'left';
+        } else {
+          detectedView = 'front';
+        }
+      } else {
+        // No nose detected, likely back view
+        detectedView = 'back';
+      }
+
+      // Update current view if it changed
+      if (detectedView !== currentView) {
+        setCurrentView(detectedView);
+      }
+
       // Calculate torso center and dimensions
       const shoulderCenterX = (leftShoulder.x + rightShoulder.x) / 2;
       const shoulderCenterY = (leftShoulder.y + rightShoulder.y) / 2;
@@ -257,7 +283,7 @@ export function VirtualTryOn({ onClose }: VirtualTryOnProps) {
       </div>
 
       {/* Main Viewport */}
-      <div className="relative w-full h-full max-w-4xl max-h-[80vh] flex items-center justify-center bg-neutral-900 overflow-hidden rounded-2xl shadow-2xl border border-white/10">
+      <div className="relative w-full h-full flex items-center justify-center bg-neutral-900 overflow-hidden">
         
         {isLoading && (
           <div className="absolute inset-0 flex flex-col items-center justify-center text-white z-50 bg-neutral-900">
@@ -294,36 +320,23 @@ export function VirtualTryOn({ onClose }: VirtualTryOnProps) {
         />
 
         {/* UI Overlay */}
-        <div className="absolute bottom-8 left-0 right-0 flex justify-center items-end gap-4 px-6 z-20">
-            
-            {/* View Switcher */}
-            <div className="flex bg-black/50 backdrop-blur-md rounded-full p-1 border border-white/10 mb-2">
-              {(['front', 'back', 'left', 'right'] as const).map((view) => (
-                <button
-                  key={view}
-                  onClick={() => setCurrentView(view)}
-                  className={`px-4 py-2 rounded-full text-xs font-bold uppercase transition-all ${
-                    currentView === view 
-                      ? 'bg-primary text-black shadow-lg' 
-                      : 'text-white/70 hover:text-white'
-                  }`}
-                >
-                  {view}
-                </button>
-              ))}
-            </div>
-
+        <div className="absolute bottom-12 left-0 right-0 flex justify-center items-center z-20">
             {/* Capture Button */}
             <button
               onClick={capturePhoto}
-              className="group relative flex items-center justify-center w-16 h-16 rounded-full bg-white text-black shadow-[0_0_30px_rgba(255,255,255,0.3)] hover:scale-110 transition-transform"
+              className="group relative flex items-center justify-center w-20 h-20 rounded-full bg-white text-black shadow-[0_0_30px_rgba(255,255,255,0.3)] hover:scale-110 transition-transform"
             >
-              <Camera className="w-6 h-6" />
+              <Camera className="w-8 h-8" />
             </button>
         </div>
 
+        {/* Orientation Status (Small, discrete) */}
+        <div className="absolute bottom-32 left-1/2 -translate-x-1/2 z-20 px-4 py-2 bg-black/50 backdrop-blur-md rounded-full border border-white/10 text-[10px] text-white/50 uppercase tracking-[0.2em]">
+          Mode: <span className="text-primary font-bold">{currentView}</span>
+        </div>
+
         {/* Stats Overlay */}
-        <div className="absolute top-6 left-6 z-20 bg-black/40 backdrop-blur-md rounded-lg p-3 border border-white/5 text-xs font-mono text-white/70 space-y-1">
+        <div className="absolute top-24 left-6 z-20 bg-black/40 backdrop-blur-md rounded-lg p-3 border border-white/5 text-xs font-mono text-white/70 space-y-1">
           <div className="flex justify-between w-24">
             <span>FPS:</span>
             <span className="text-primary">{metrics.fps}</span>
