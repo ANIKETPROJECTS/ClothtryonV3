@@ -6,6 +6,7 @@ import { Navigation } from "@/components/Navigation";
 import { VirtualTryOn } from "@/components/VirtualTryOn";
 import { useProduct } from "@/hooks/use-products";
 import { TSHIRT_CONFIG } from "@/lib/tshirt-config";
+import { formatPrice } from "@/lib/utils";
 
 export default function ProductDetail() {
   const { id } = useParams();
@@ -114,7 +115,7 @@ export default function ProductDetail() {
               
               <div className="flex items-center gap-4 mb-6">
                 <span className="text-3xl font-light text-white">
-                  ${(product.price / 100).toFixed(2)}
+                  {formatPrice(product.price)}
                 </span>
                 <div className="flex items-center text-yellow-500 text-sm">
                   <Star className="w-4 h-4 fill-current" />

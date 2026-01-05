@@ -1,6 +1,7 @@
 import { motion } from "framer-motion";
 import { Link } from "wouter";
 import type { Product } from "@shared/schema";
+import { formatPrice } from "@/lib/utils";
 
 interface ProductCardProps {
   product: Product;
@@ -52,7 +53,7 @@ export function ProductCard({ product, index }: ProductCardProps) {
             </p>
           </div>
           <p className="text-lg font-medium text-white">
-            ${(product.price / 100).toFixed(2)}
+            {formatPrice(product.price)}
           </p>
         </div>
       </Link>
