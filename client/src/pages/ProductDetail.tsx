@@ -77,9 +77,9 @@ export default function ProductDetail() {
               {/* Floating VTO Trigger */}
               <button
                 onClick={() => setIsVTOOpen(true)}
-                className="absolute bottom-6 right-6 bg-white/10 hover:bg-white/20 backdrop-blur-md border border-white/20 text-white px-6 py-3 rounded-full flex items-center gap-2 transition-all group-hover:scale-105 shadow-xl"
+                className="absolute bottom-6 right-6 bg-white/10 hover:bg-white/20 backdrop-blur-md border border-white/20 text-black px-6 py-3 rounded-full flex items-center gap-2 transition-all group-hover:scale-105 shadow-xl"
               >
-                <Scan className="w-5 h-5 text-primary" />
+                <Scan className="w-5 h-5 text-black" />
                 <span className="font-bold">Virtual Try-On</span>
               </button>
             </motion.div>
