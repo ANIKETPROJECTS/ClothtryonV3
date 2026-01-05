@@ -63,10 +63,10 @@ async function seedDatabase() {
         price: 4999, // ₹4,999
         sku: "ONYU-HD-002",
         images: {
-          front: "https://images.unsplash.com/photo-1556821840-3a63f95609a7?q=80&w=600&auto=format&fit=crop",
-          back: "https://images.unsplash.com/photo-1556821840-3a63f95609a7?q=80&w=600&auto=format&fit=crop",
-          left: "https://images.unsplash.com/photo-1556821840-3a63f95609a7?q=80&w=600&auto=format&fit=crop",
-          right: "https://images.unsplash.com/photo-1556821840-3a63f95609a7?q=80&w=600&auto=format&fit=crop"
+          front: "/src/assets/generated_images/premium_black_stealth_hoodie_product_shot.png",
+          back: "/src/assets/generated_images/premium_black_stealth_hoodie_product_shot.png",
+          left: "/src/assets/generated_images/premium_black_stealth_hoodie_product_shot.png",
+          right: "/src/assets/generated_images/premium_black_stealth_hoodie_product_shot.png"
         },
         features: [
           "400GSM French Terry",
@@ -81,10 +81,10 @@ async function seedDatabase() {
         price: 3999, // ₹3,999
         sku: "ONYU-JG-003",
         images: {
-          front: "https://images.unsplash.com/photo-1584103142927-ed5260f336fc?q=80&w=600&auto=format&fit=crop",
-          back: "https://images.unsplash.com/photo-1584103142927-ed5260f336fc?q=80&w=600&auto=format&fit=crop",
-          left: "https://images.unsplash.com/photo-1584103142927-ed5260f336fc?q=80&w=600&auto=format&fit=crop",
-          right: "https://images.unsplash.com/photo-1584103142927-ed5260f336fc?q=80&w=600&auto=format&fit=crop"
+          front: "/src/assets/generated_images/premium_technical_cargo_joggers_product_shot.png",
+          back: "/src/assets/generated_images/premium_technical_cargo_joggers_product_shot.png",
+          left: "/src/assets/generated_images/premium_technical_cargo_joggers_product_shot.png",
+          right: "/src/assets/generated_images/premium_technical_cargo_joggers_product_shot.png"
         },
         features: [
           "4-Way Stretch Nylon",
