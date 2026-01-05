@@ -282,6 +282,10 @@ export function VirtualTryOn({ onClose }: VirtualTryOnProps) {
     const rightShoulder = keypoints.find((k) => k.name === "right_shoulder");
     const leftHip = keypoints.find((k) => k.name === "left_hip");
     const rightHip = keypoints.find((k) => k.name === "right_hip");
+    const leftElbow = keypoints.find((k) => k.name === "left_elbow");
+    const rightElbow = keypoints.find((k) => k.name === "right_elbow");
+    const leftWrist = keypoints.find((k) => k.name === "left_wrist");
+    const rightWrist = keypoints.find((k) => k.name === "right_wrist");
 
     ctx.strokeStyle = "#00FF00"; // Bright Green
     ctx.lineWidth = 3;
@@ -307,6 +311,25 @@ export function VirtualTryOn({ onClose }: VirtualTryOnProps) {
       ctx.closePath();
       ctx.stroke();
     }
+
+    // Draw Arm Lines
+    const drawArm = (p1?: Keypoint, p2?: Keypoint, p3?: Keypoint) => {
+      if (p1 && p2 && p1.score! > 0.3 && p2.score! > 0.3) {
+        ctx.beginPath();
+        ctx.moveTo(p1.x, p1.y);
+        ctx.lineTo(p2.x, p2.y);
+        ctx.stroke();
+      }
+      if (p2 && p3 && p2.score! > 0.3 && p3.score! > 0.3) {
+        ctx.beginPath();
+        ctx.moveTo(p2.x, p2.y);
+        ctx.lineTo(p3.x, p3.y);
+        ctx.stroke();
+      }
+    };
+
+    drawArm(leftShoulder, leftElbow, leftWrist);
+    drawArm(rightShoulder, rightElbow, rightWrist);
   };
 
   const capturePhoto = () => {
