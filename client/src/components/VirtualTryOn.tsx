@@ -89,13 +89,12 @@ export function VirtualTryOn({ onClose }: VirtualTryOnProps) {
       });
 
       const end = performance.now();
-      const frameTime = end - start;
-      const actualFps = 1000 / frameTime;
+      const fps = 1000 / (end - start);
 
       if (poses && poses.length > 0) {
         const pose = poses[0];
         setMetrics({ 
-          fps: Math.round(actualFps), 
+          fps: Math.round(fps), 
           confidence: Math.round((pose.score || 0) * 100) 
         });
         
@@ -104,12 +103,12 @@ export function VirtualTryOn({ onClose }: VirtualTryOnProps) {
         // Clear canvas if no pose detected
         const ctx = canvasRef.current.getContext("2d");
         if (ctx) ctx.clearRect(0, 0, videoWidth, videoHeight);
-        setMetrics(prev => ({ ...prev, fps: Math.round(actualFps), confidence: 0 }));
+        setMetrics(prev => ({ ...prev, fps: Math.round(fps), confidence: 0 }));
       }
     }
   }, [model, currentView]);
 
-  // Request Animation Frame Loop - Uncapped for maximum performance
+  // Request Animation Frame Loop
   useEffect(() => {
     let animationFrameId: number;
     let isRunning = true;
@@ -242,32 +241,33 @@ export function VirtualTryOn({ onClose }: VirtualTryOnProps) {
       // Select Image
       const shirtImg = shirtImages.current[currentView];
 
-      if (shirtImg) {
-        if (ctx) {
-          ctx.save();
-          
-          // Move to center of torso (approximate anchor point)
-          // Adjust vertical offset slightly up to cover shoulders properly
-          const anchorX = shoulderCenterX;
-          const anchorY = shoulderCenterY;
+      if (shirtImg && false) {
+        ctx.save();
+        
+        // Move to center of torso (approximate anchor point)
+        // Adjust vertical offset slightly up to cover shoulders properly
+        const anchorX = shoulderCenterX;
+        const anchorY = shoulderCenterY;
 
-          ctx.translate(anchorX, anchorY);
-          ctx.rotate(angle);
+        ctx.translate(anchorX, anchorY);
+        ctx.rotate(angle);
 
-          // Scale
-          const scale = (shoulderWidth * TSHIRT_CONFIG.calibration.scaleFactor) / shirtImg.width;
-          ctx.scale(scale, scale);
+        // Scale
+        const scale = (shoulderWidth * TSHIRT_CONFIG.calibration.scaleFactor) / shirtImg.width;
+        ctx.scale(scale, scale);
 
-          // Draw Image (Centered)
-          // Adjust Y offset based on config
-          ctx.drawImage(
-            shirtImg, 
-            -shirtImg.width / 2, 
-            -shirtImg.height * 0.15 + TSHIRT_CONFIG.calibration.verticalOffset // 15% up to align neck
-          );
+        // Draw Image (Centered)
+        // Adjust Y offset based on config
+        ctx.drawImage(
+          shirtImg, 
+          -shirtImg.width / 2, 
+          -shirtImg.height * 0.15 + TSHIRT_CONFIG.calibration.verticalOffset // 15% up to align neck
+        );
 
-          ctx.restore();
-        }
+        ctx.restore();
+
+        // Debug: Draw skeleton overlay
+        // drawSkeleton(ctx, keypoints);
       }
     }
   };
