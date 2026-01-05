@@ -253,32 +253,31 @@ export function VirtualTryOn({ onClose }: VirtualTryOnProps) {
       const shirtImg = shirtImages.current[currentView];
 
       if (shirtImg && false) {
-        ctx.save();
-        
-        // Move to center of torso (approximate anchor point)
-        // Adjust vertical offset slightly up to cover shoulders properly
-        const anchorX = shoulderCenterX;
-        const anchorY = shoulderCenterY;
+        if (ctx) {
+          ctx.save();
+          
+          // Move to center of torso (approximate anchor point)
+          // Adjust vertical offset slightly up to cover shoulders properly
+          const anchorX = shoulderCenterX;
+          const anchorY = shoulderCenterY;
 
-        ctx.translate(anchorX, anchorY);
-        ctx.rotate(angle);
+          ctx.translate(anchorX, anchorY);
+          ctx.rotate(angle);
 
-        // Scale
-        const scale = (shoulderWidth * TSHIRT_CONFIG.calibration.scaleFactor) / shirtImg.width;
-        ctx.scale(scale, scale);
+          // Scale
+          const scale = (shoulderWidth * TSHIRT_CONFIG.calibration.scaleFactor) / shirtImg.width;
+          ctx.scale(scale, scale);
 
-        // Draw Image (Centered)
-        // Adjust Y offset based on config
-        ctx.drawImage(
-          shirtImg, 
-          -shirtImg.width / 2, 
-          -shirtImg.height * 0.15 + TSHIRT_CONFIG.calibration.verticalOffset // 15% up to align neck
-        );
+          // Draw Image (Centered)
+          // Adjust Y offset based on config
+          ctx.drawImage(
+            shirtImg, 
+            -shirtImg.width / 2, 
+            -shirtImg.height * 0.15 + TSHIRT_CONFIG.calibration.verticalOffset // 15% up to align neck
+          );
 
-        ctx.restore();
-
-        // Debug: Draw skeleton overlay
-        // drawSkeleton(ctx, keypoints);
+          ctx.restore();
+        }
       }
     }
   };
