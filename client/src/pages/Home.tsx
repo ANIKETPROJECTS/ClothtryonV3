@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { Link } from "wouter";
 import { motion } from "framer-motion";
-import { ArrowRight, Star, ShoppingBag, Truck, ShieldCheck } from "lucide-react";
+import { ArrowRight, Star, ShoppingBag, Truck, ShieldCheck, Scan } from "lucide-react";
 import { Navigation } from "@/components/Navigation";
 import { ProductCard } from "@/components/ProductCard";
 import { useProducts } from "@/hooks/use-products";
