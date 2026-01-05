@@ -32,12 +32,14 @@ export function VirtualTryOn({ onClose }: VirtualTryOnProps) {
     const loadModel = async () => {
       try {
         await tf.ready();
-        const detectorConfig: poseDetection.MoveNetModelConfig = {
-          modelType: poseDetection.movenet.modelType.SINGLEPOSE_LIGHTNING,
+        // Switching to BlazePose for better 3D keypoints (z-axis)
+        const detectorConfig: poseDetection.BlazePoseTfjsModelConfig = {
+          runtime: 'tfjs',
+          modelType: 'full',
           enableSmoothing: true
         };
         const detector = await poseDetection.createDetector(
-          poseDetection.SupportedModels.MoveNet,
+          poseDetection.SupportedModels.BlazePose,
           detectorConfig
         );
         setModel(detector);
@@ -150,12 +152,10 @@ export function VirtualTryOn({ onClose }: VirtualTryOnProps) {
     const rightEar = keypoints.find((k) => k.name === "right_ear");
 
     // Only draw if we have high confidence in keypoints
-    const minConfidence = 0.25; // Lower confidence to be more forgiving in low light
+    const minConfidence = 0.25; 
     if (
       leftShoulder && leftShoulder.score! > minConfidence &&
-      rightShoulder && rightShoulder.score! > minConfidence &&
-      leftHip && leftHip.score! > minConfidence &&
-      rightHip && rightHip.score! > minConfidence
+      rightShoulder && rightShoulder.score! > minConfidence
     ) {
       // Determine Orientation automatically with refined logic
       let detectedView: 'front' | 'back' | 'left' | 'right' = currentView;
@@ -163,25 +163,23 @@ export function VirtualTryOn({ onClose }: VirtualTryOnProps) {
       const hasNose = nose && nose.score! > minConfidence;
       const hasLeftEye = leftEye && leftEye.score! > minConfidence;
       const hasRightEye = rightEye && rightEye.score! > minConfidence;
-      const hasLeftEar = leftEar && leftEar.score! > minConfidence;
-      const hasRightEar = rightEar && rightEar.score! > minConfidence;
       
       const faceVisible = hasNose || hasLeftEye || hasRightEye;
 
       // Logic:
-      // 1. FRONT: Face is visible and nose is relatively centered between shoulders
+      // 1. FRONT: If facial features are visible, it's a front view.
       if (faceVisible) {
         const shoulderCenter = (leftShoulder.x + rightShoulder.x) / 2;
         const shoulderWidth = Math.abs(rightShoulder.x - leftShoulder.x);
         
         if (hasNose) {
           const noseX = nose!.x;
-          // Use a very high threshold for profile to favor front view
+          // Normalized offset (-1 to 1 based on shoulder width)
           const noseOffset = (noseX - shoulderCenter) / (shoulderWidth / 2);
           
-          if (noseOffset > 0.8) {
+          if (noseOffset > 0.45) {
             detectedView = 'right';
-          } else if (noseOffset < -0.8) {
+          } else if (noseOffset < -0.45) {
             detectedView = 'left';
           } else {
             detectedView = 'front';
@@ -190,16 +188,19 @@ export function VirtualTryOn({ onClose }: VirtualTryOnProps) {
           detectedView = 'front';
         }
       } 
-      // 2. PROFILE: One ear is visible but face is not clearly detected
-      else if (hasLeftEar && !hasRightEar) {
-        detectedView = 'left';
-      }
-      else if (hasRightEar && !hasLeftEar) {
-        detectedView = 'right';
-      }
-      // 3. BACK: Neither face nor single ear profile
+      // 2. BACK/PROFILE: Face is not visible
       else {
-        detectedView = 'back';
+        // BlazePose provides z-axis. If we don't have facial features, check z-depth.
+        // For 2D fallback: If no face features are seen, it's likely BACK unless one shoulder is much higher than other (side)
+        const shoulderDiff = Math.abs(leftShoulder.x - rightShoulder.x);
+        const hipDiff = (leftHip && rightHip) ? Math.abs(leftHip.x - rightHip.x) : 100;
+        
+        if (shoulderDiff < 50 || hipDiff < 50) {
+           // Body is turned narrow
+           detectedView = (leftShoulder.x < rightShoulder.x) ? 'left' : 'right';
+        } else {
+           detectedView = 'back';
+        }
       }
 
       // Update current view if it changed
@@ -241,7 +242,7 @@ export function VirtualTryOn({ onClose }: VirtualTryOnProps) {
       // Select Image
       const shirtImg = shirtImages.current[currentView];
 
-      if (shirtImg && false) {
+      if (shirtImg) {
         ctx.save();
         
         // Move to center of torso (approximate anchor point)
