@@ -44,10 +44,10 @@ async function seedDatabase() {
       price: 4999, // $49.99
       sku: "ONYU-TEE-001",
       images: {
-        front: "https://placehold.co/600x800/1a1a1a/D4AF37?text=ONYU+Front",
-        back: "https://placehold.co/600x800/1a1a1a/D4AF37?text=ONYU+Back",
-        left: "https://placehold.co/600x800/1a1a1a/D4AF37?text=ONYU+Left",
-        right: "https://placehold.co/600x800/1a1a1a/D4AF37?text=ONYU+Right"
+        front: "/src/assets/generated_images/premium_black_t-shirt_front_view.png",
+        back: "/src/assets/generated_images/premium_black_t-shirt_back_view.png",
+        left: "/src/assets/generated_images/premium_black_t-shirt_left_side_view.png",
+        right: "/src/assets/generated_images/premium_black_t-shirt_right_side_view.png"
       },
       features: [
         "100% Organic Cotton",

@@ -196,14 +196,14 @@ export default function Home() {
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex flex-col md:flex-row justify-between items-center gap-6">
             <span className="text-xl font-display font-bold tracking-tighter text-white">
-              LUXE<span className="text-primary">.</span>
+              ONYU<span className="text-primary">.</span>
             </span>
             <div className="flex space-x-6 text-sm text-neutral-500">
               <a href="#" className="hover:text-white transition-colors">Privacy Policy</a>
               <a href="#" className="hover:text-white transition-colors">Terms of Service</a>
               <a href="#" className="hover:text-white transition-colors">Contact</a>
             </div>
-            <p className="text-sm text-neutral-600">© 2025 LUXE Digital Fashion.</p>
+            <p className="text-sm text-neutral-600">© 2025 ONYU Digital Fashion.</p>
           </div>
         </div>
       </footer>

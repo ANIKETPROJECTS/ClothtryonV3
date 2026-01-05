@@ -13,7 +13,7 @@ export function Navigation() {
           {/* Logo */}
           <Link href="/" className="flex-shrink-0">
             <span className="text-2xl font-display font-bold tracking-tighter text-white">
-              LUXE<span className="text-primary">.</span>
+              ONYU<span className="text-primary">.</span>
             </span>
           </Link>
 
