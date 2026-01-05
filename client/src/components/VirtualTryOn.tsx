@@ -330,6 +330,19 @@ export function VirtualTryOn({ onClose }: VirtualTryOnProps) {
 
     drawArm(leftShoulder, leftElbow, leftWrist);
     drawArm(rightShoulder, rightElbow, rightWrist);
+
+    // Draw Face Mesh (Eyes and Nose)
+    const nose = keypoints.find((k) => k.name === "nose");
+    const leftEye = keypoints.find((k) => k.name === "left_eye");
+    const rightEye = keypoints.find((k) => k.name === "right_eye");
+
+    if (nose && leftEye && rightEye && nose.score! > 0.3 && leftEye.score! > 0.3 && rightEye.score! > 0.3) {
+      ctx.beginPath();
+      ctx.moveTo(leftEye.x, leftEye.y);
+      ctx.lineTo(nose.x, nose.y);
+      ctx.lineTo(rightEye.x, rightEye.y);
+      ctx.stroke();
+    }
   };
 
   const capturePhoto = () => {
