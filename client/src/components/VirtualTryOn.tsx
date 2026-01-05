@@ -89,12 +89,13 @@ export function VirtualTryOn({ onClose }: VirtualTryOnProps) {
       });
 
       const end = performance.now();
-      const fps = 1000 / (end - start);
+      const frameTime = end - start;
+      const actualFps = 1000 / frameTime;
 
       if (poses && poses.length > 0) {
         const pose = poses[0];
         setMetrics({ 
-          fps: Math.round(fps), 
+          fps: Math.round(actualFps), 
           confidence: Math.round((pose.score || 0) * 100) 
         });
         
@@ -103,26 +104,26 @@ export function VirtualTryOn({ onClose }: VirtualTryOnProps) {
         // Clear canvas if no pose detected
         const ctx = canvasRef.current.getContext("2d");
         if (ctx) ctx.clearRect(0, 0, videoWidth, videoHeight);
-        setMetrics(prev => ({ ...prev, fps: Math.round(fps), confidence: 0 }));
+        setMetrics(prev => ({ ...prev, fps: Math.round(actualFps), confidence: 0 }));
       }
     }
   }, [model, currentView]);
 
-  // Request Animation Frame Loop
+  // Request Animation Frame Loop with 60 FPS cap
   useEffect(() => {
     let animationFrameId: number;
     let isRunning = true;
-    let lastTime = 0;
-    const fpsLimit = 60;
-    const interval = 1000 / fpsLimit;
+    let lastTime = performance.now();
+    const frameTarget = 1000 / 60; // target 60fps
 
-    const loop = async (time: number) => {
+    const loop = async () => {
       if (!isRunning) return;
       
-      const deltaTime = time - lastTime;
-      
-      if (deltaTime >= interval) {
-        lastTime = time - (deltaTime % interval);
+      const now = performance.now();
+      const elapsed = now - lastTime;
+
+      if (elapsed >= frameTarget) {
+        lastTime = now - (elapsed % frameTarget);
         await detect();
       }
       
@@ -130,7 +131,7 @@ export function VirtualTryOn({ onClose }: VirtualTryOnProps) {
     };
 
     if (!isLoading && model) {
-      animationFrameId = requestAnimationFrame(loop);
+      loop();
     }
 
     return () => {
