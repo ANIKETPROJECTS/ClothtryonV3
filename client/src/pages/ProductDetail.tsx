@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { useParams, useLocation } from "wouter";
+import { useParams, useLocation, Link } from "wouter";
 import { motion, AnimatePresence } from "framer-motion";
 import { ShoppingBag, Star, Share2, Heart, Scan, Check } from "lucide-react";
 import { Navigation } from "@/components/Navigation";
@@ -14,11 +14,11 @@ export default function ProductDetail() {
   const [selectedSize, setSelectedSize] = useState<string | null>(null);
   const [activeImage, setActiveImage] = useState(0);
 
-  // In a real app, use the hook. For VTO demo continuity, we merge mock data.
-  // const { data: product } = useProduct(Number(id));
+  // Use the actual product data from the hook
+  const { data: fetchedProduct } = useProduct(Number(id));
   
-  // Mock data for display consistency
-  const product = {
+  // Use product images if available, otherwise fallback to mock for demo
+  const product = fetchedProduct || {
     id: 1,
     name: TSHIRT_CONFIG.name,
     price: TSHIRT_CONFIG.price,
@@ -26,18 +26,24 @@ export default function ProductDetail() {
     images: {
       front: TSHIRT_CONFIG.images.front,
       back: TSHIRT_CONFIG.images.back,
-      gallery: [
-         TSHIRT_CONFIG.images.front,
-         TSHIRT_CONFIG.images.back,
-         TSHIRT_CONFIG.images.left,
-         TSHIRT_CONFIG.images.right
-      ]
+      left: TSHIRT_CONFIG.images.left,
+      right: TSHIRT_CONFIG.images.right,
     },
     sizes: ["XS", "S", "M", "L", "XL"],
     features: ["100% Organic Cotton", "Heavyweight 280gsm", "Boxy Fit", "Made in Portugal"]
   };
 
-  const images = product.images.gallery;
+  const images = [
+    product.images.front,
+    product.images.back,
+    product.images.left,
+    product.images.right
+  ].filter(Boolean);
+
+  const getViewLabel = (idx: number) => {
+    const labels = ["Front View", "Back View", "Left Side", "Right Side"];
+    return labels[idx] || `View ${idx + 1}`;
+  };
 
   return (
     <div className="min-h-screen bg-background text-foreground">
@@ -84,11 +90,12 @@ export default function ProductDetail() {
                 <button
                   key={idx}
                   onClick={() => setActiveImage(idx)}
-                  className={`aspect-square rounded-md overflow-hidden border-2 transition-all ${
+                  className={`aspect-square rounded-md overflow-hidden border-2 transition-all flex flex-col items-center ${
                     activeImage === idx ? "border-primary" : "border-transparent opacity-60 hover:opacity-100"
                   }`}
                 >
-                  <img src={img} alt={`View ${idx}`} className="w-full h-full object-cover" />
+                  <img src={img} alt={getViewLabel(idx)} className="w-full h-full object-cover" />
+                  <span className="text-[10px] uppercase mt-1 text-neutral-500 font-bold">{getViewLabel(idx)}</span>
                 </button>
               ))}
             </div>

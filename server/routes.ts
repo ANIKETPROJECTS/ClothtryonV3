@@ -64,9 +64,9 @@ async function seedDatabase() {
         sku: "ONYU-HD-002",
         images: {
           front: "/src/assets/generated_images/premium_black_stealth_hoodie_product_shot.png",
-          back: "/src/assets/generated_images/premium_black_stealth_hoodie_product_shot.png",
-          left: "/src/assets/generated_images/premium_black_stealth_hoodie_product_shot.png",
-          right: "/src/assets/generated_images/premium_black_stealth_hoodie_product_shot.png"
+          back: "/src/assets/generated_images/premium_black_hoodie_back_view_(no_background).png",
+          left: "/src/assets/generated_images/premium_black_hoodie_left_side_view_(no_background).png",
+          right: "/src/assets/generated_images/premium_black_hoodie_right_side_view_(no_background).png"
         },
         features: [
           "400GSM French Terry",
@@ -82,9 +82,9 @@ async function seedDatabase() {
         sku: "ONYU-JG-003",
         images: {
           front: "/src/assets/generated_images/premium_technical_cargo_joggers_product_shot.png",
-          back: "/src/assets/generated_images/premium_technical_cargo_joggers_product_shot.png",
-          left: "/src/assets/generated_images/premium_technical_cargo_joggers_product_shot.png",
-          right: "/src/assets/generated_images/premium_technical_cargo_joggers_product_shot.png"
+          back: "/src/assets/generated_images/premium_black_cargo_joggers_back_view_(no_background).png",
+          left: "/src/assets/generated_images/premium_black_cargo_joggers_left_side_view_(no_background).png",
+          right: "/src/assets/generated_images/premium_black_cargo_joggers_right_side_view_(no_background).png"
         },
         features: [
           "4-Way Stretch Nylon",
