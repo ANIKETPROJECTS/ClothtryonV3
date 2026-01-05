@@ -112,15 +112,25 @@ export function VirtualTryOn({ onClose }: VirtualTryOnProps) {
   useEffect(() => {
     let animationFrameId: number;
     let isRunning = true;
+    let lastTime = 0;
+    const fpsLimit = 60;
+    const interval = 1000 / fpsLimit;
 
-    const loop = async () => {
+    const loop = async (time: number) => {
       if (!isRunning) return;
-      await detect();
+      
+      const deltaTime = time - lastTime;
+      
+      if (deltaTime >= interval) {
+        lastTime = time - (deltaTime % interval);
+        await detect();
+      }
+      
       animationFrameId = requestAnimationFrame(loop);
     };
 
     if (!isLoading && model) {
-      loop();
+      animationFrameId = requestAnimationFrame(loop);
     }
 
     return () => {
