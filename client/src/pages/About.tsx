@@ -69,6 +69,29 @@ export default function About() {
           </div>
         </div>
 
+        {/* FAQ Section */}
+        <section className="mb-32">
+          <h2 className="text-4xl font-display font-bold text-white mb-12 text-center">Frequently Asked Questions</h2>
+          <div className="grid md:grid-cols-2 gap-8 max-w-4xl mx-auto">
+            <div className="bg-neutral-900 p-6 rounded-xl border border-white/5">
+              <h3 className="text-white font-bold mb-2">How accurate is the Virtual Try-On?</h3>
+              <p className="text-neutral-400 text-sm">Our AI tracking technology maps garments with over 95% accuracy to your body proportions in real-time.</p>
+            </div>
+            <div className="bg-neutral-900 p-6 rounded-xl border border-white/5">
+              <h3 className="text-white font-bold mb-2">Is my camera feed private?</h3>
+              <p className="text-neutral-400 text-sm">Yes. All pose detection processing happens locally on your device. We never store or upload your video feed.</p>
+            </div>
+            <div className="bg-neutral-900 p-6 rounded-xl border border-white/5">
+              <h3 className="text-white font-bold mb-2">What is the delivery time?</h3>
+              <p className="text-neutral-400 text-sm">We offer express shipping across India, typically delivering within 3-5 business days.</p>
+            </div>
+            <div className="bg-neutral-900 p-6 rounded-xl border border-white/5">
+              <h3 className="text-white font-bold mb-2">What is your return policy?</h3>
+              <p className="text-neutral-400 text-sm">We offer a 7-day no-questions-asked return policy for all unworn items in original packaging.</p>
+            </div>
+          </div>
+        </section>
+
         <section className="bg-neutral-900 rounded-3xl p-8 md:p-16 text-center border border-white/5">
           <motion.div
             initial={{ opacity: 0, scale: 0.95 }}
