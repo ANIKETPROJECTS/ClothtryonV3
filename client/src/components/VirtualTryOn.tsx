@@ -166,39 +166,35 @@ export function VirtualTryOn({ onClose }: VirtualTryOnProps) {
       const hasLeftEar = leftEar && leftEar.score! > minConfidence;
       const hasRightEar = rightEar && rightEar.score! > minConfidence;
       
-      const facePoints = [hasNose, hasLeftEye, hasRightEye, hasLeftEar, hasRightEar].filter(Boolean).length;
+      const facePoints = [hasNose, hasLeftEye, hasRightEye].filter(Boolean).length;
 
-      if (facePoints < 2) {
-        // Very few face points, likely back view
-        detectedView = 'back';
-      } else {
+      if (facePoints > 0) {
         // Face is visible, determine if it's front or profile
         const shoulderCenter = (leftShoulder.x + rightShoulder.x) / 2;
         const shoulderWidth = Math.abs(rightShoulder.x - leftShoulder.x);
         
-        // Profiles usually have one ear much more confident/visible than the other
-        // and the nose is significantly offset from the shoulder center
-        const leftSideVisible = hasLeftEar || (leftEye && leftEye.score! > minConfidence);
-        const rightSideVisible = hasRightEar || (rightEye && rightEye.score! > minConfidence);
-
         if (hasNose) {
           const noseX = nose!.x;
           const noseOffset = (noseX - shoulderCenter) / (shoulderWidth / 2);
           
-          // Refined thresholds for smoother switching
-          if (noseOffset > 0.35) {
+          if (noseOffset > 0.4) {
             detectedView = 'right';
-          } else if (noseOffset < -0.35) {
+          } else if (noseOffset < -0.4) {
             detectedView = 'left';
           } else {
             detectedView = 'front';
           }
-        } else if (leftSideVisible && !rightSideVisible) {
-          detectedView = 'left';
-        } else if (rightSideVisible && !leftSideVisible) {
-          detectedView = 'right';
         } else {
           detectedView = 'front';
+        }
+      } else {
+        // Face not detected, check if it's back or profile via ears
+        if (hasLeftEar && !hasRightEar) {
+          detectedView = 'left';
+        } else if (hasRightEar && !hasLeftEar) {
+          detectedView = 'right';
+        } else {
+          detectedView = 'back';
         }
       }
 
