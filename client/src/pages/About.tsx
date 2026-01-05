@@ -1,6 +1,7 @@
 import { motion } from "framer-motion";
 import { Navigation } from "@/components/Navigation";
 import { ShieldCheck, Zap, Globe, Users } from "lucide-react";
+import { Link } from "wouter";
 
 const fadeInUp = {
   initial: { opacity: 0, y: 20 },
