@@ -77,18 +77,22 @@ export function VirtualTryOn({ onClose }: VirtualTryOnProps) {
       const videoHeight = video.videoHeight;
 
       // Ensure canvas matches video dimensions
-      canvasRef.current.width = videoWidth;
-      canvasRef.current.height = videoHeight;
+      if (canvasRef.current.width !== videoWidth || canvasRef.current.height !== videoHeight) {
+        canvasRef.current.width = videoWidth;
+        canvasRef.current.height = videoHeight;
+      }
 
       const start = performance.now();
 
       // Estimate poses
-      const poses = await model.estimatePoses(video);
+      const poses = await model.estimatePoses(video, {
+        flipHorizontal: false // We handle mirroring via CSS/Webcam component
+      });
 
       const end = performance.now();
       const fps = 1000 / (end - start);
 
-      if (poses.length > 0) {
+      if (poses && poses.length > 0) {
         const pose = poses[0];
         setMetrics({ 
           fps: Math.round(fps), 
@@ -96,6 +100,11 @@ export function VirtualTryOn({ onClose }: VirtualTryOnProps) {
         });
         
         drawCanvas(pose, videoWidth, videoHeight, canvasRef.current);
+      } else {
+        // Clear canvas if no pose detected
+        const ctx = canvasRef.current.getContext("2d");
+        if (ctx) ctx.clearRect(0, 0, videoWidth, videoHeight);
+        setMetrics(prev => ({ ...prev, fps: Math.round(fps), confidence: 0 }));
       }
     }
   }, [model]);
@@ -103,8 +112,10 @@ export function VirtualTryOn({ onClose }: VirtualTryOnProps) {
   // Request Animation Frame Loop
   useEffect(() => {
     let animationFrameId: number;
+    let isRunning = true;
 
     const loop = async () => {
+      if (!isRunning) return;
       await detect();
       animationFrameId = requestAnimationFrame(loop);
     };
@@ -114,6 +125,7 @@ export function VirtualTryOn({ onClose }: VirtualTryOnProps) {
     }
 
     return () => {
+      isRunning = false;
       cancelAnimationFrame(animationFrameId);
     };
   }, [detect, isLoading, model]);
