@@ -109,24 +109,14 @@ export function VirtualTryOn({ onClose }: VirtualTryOnProps) {
     }
   }, [model, currentView]);
 
-  // Request Animation Frame Loop with 60 FPS cap
+  // Request Animation Frame Loop - Uncapped for maximum performance
   useEffect(() => {
     let animationFrameId: number;
     let isRunning = true;
-    let lastTime = performance.now();
-    const frameTarget = 1000 / 60; // target 60fps
 
     const loop = async () => {
       if (!isRunning) return;
-      
-      const now = performance.now();
-      const elapsed = now - lastTime;
-
-      if (elapsed >= frameTarget) {
-        lastTime = now - (elapsed % frameTarget);
-        await detect();
-      }
-      
+      await detect();
       animationFrameId = requestAnimationFrame(loop);
     };
 
@@ -252,7 +242,7 @@ export function VirtualTryOn({ onClose }: VirtualTryOnProps) {
       // Select Image
       const shirtImg = shirtImages.current[currentView];
 
-      if (shirtImg && false) {
+      if (shirtImg) {
         if (ctx) {
           ctx.save();
           
