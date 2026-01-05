@@ -150,7 +150,7 @@ export function VirtualTryOn({ onClose }: VirtualTryOnProps) {
     const rightEar = keypoints.find((k) => k.name === "right_ear");
 
     // Only draw if we have high confidence in keypoints
-    const minConfidence = 0.3;
+    const minConfidence = 0.5;
     if (
       leftShoulder && leftShoulder.score! > minConfidence &&
       rightShoulder && rightShoulder.score! > minConfidence &&
@@ -166,44 +166,33 @@ export function VirtualTryOn({ onClose }: VirtualTryOnProps) {
       const hasLeftEar = leftEar && leftEar.score! > minConfidence;
       const hasRightEar = rightEar && rightEar.score! > minConfidence;
       
-      const facePoints = [hasNose, hasLeftEye, hasRightEye].filter(Boolean).length;
+      const facePoints = [hasNose, hasLeftEye, hasRightEye, hasLeftEar, hasRightEar].filter(Boolean).length;
 
-      if (facePoints > 0) {
-        // Face is visible, determine if it's front or profile
+      // 1. Check for profile first (high ear confidence vs low other ear)
+      if (hasLeftEar && !hasRightEar && leftEar!.score! > 0.6) {
+        detectedView = 'left';
+      } else if (hasRightEar && !hasLeftEar && rightEar!.score! > 0.6) {
+        detectedView = 'right';
+      } 
+      // 2. Check for front (visible facial features)
+      else if (facePoints >= 2) {
         const shoulderCenter = (leftShoulder.x + rightShoulder.x) / 2;
         const shoulderWidth = Math.abs(rightShoulder.x - leftShoulder.x);
         
         if (hasNose) {
           const noseX = nose!.x;
-          // Normalized offset (-1 to 1 based on shoulder width)
           const noseOffset = (noseX - shoulderCenter) / (shoulderWidth / 2);
           
-          // Debugging log (internal)
-          // console.log("Nose Offset:", noseOffset);
-
-          if (noseOffset > 0.45) {
-            detectedView = 'right';
-          } else if (noseOffset < -0.45) {
-            detectedView = 'left';
-          } else {
-            detectedView = 'front';
-          }
+          if (noseOffset > 0.5) detectedView = 'right';
+          else if (noseOffset < -0.5) detectedView = 'left';
+          else detectedView = 'front';
         } else {
-          // If no nose but face points exist, likely front
           detectedView = 'front';
         }
-      } else {
-        // Face not detected
-        // Profiles can sometimes only show ears.
-        // If one ear is much stronger than the other, it's a profile
-        if (hasLeftEar && !hasRightEar) {
-          detectedView = 'left';
-        } else if (hasRightEar && !hasLeftEar) {
-          detectedView = 'right';
-        } else {
-          // No face points and no single-ear profile detected -> back view
-          detectedView = 'back';
-        }
+      } 
+      // 3. Fallback to back view
+      else {
+        detectedView = 'back';
       }
 
       // Update current view if it changed
@@ -245,7 +234,7 @@ export function VirtualTryOn({ onClose }: VirtualTryOnProps) {
       // Select Image
       const shirtImg = shirtImages.current[currentView];
 
-      if (shirtImg) {
+      if (shirtImg && false) {
         ctx.save();
         
         // Move to center of torso (approximate anchor point)
