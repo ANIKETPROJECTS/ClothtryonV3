@@ -152,13 +152,13 @@ export function VirtualTryOn({ onClose }: VirtualTryOnProps) {
     const rightEar = keypoints.find((k) => k.name === "right_ear");
 
     // Only draw if we have high confidence in keypoints
-    const minConfidence = 0.25; 
+    const minConfidence = 0.2; // Even lower to catch features in darker environments
     if (
       leftShoulder && leftShoulder.score! > minConfidence &&
       rightShoulder && rightShoulder.score! > minConfidence
     ) {
       // Determine Orientation automatically with refined logic
-      let detectedView: 'front' | 'back' | 'left' | 'right' = currentView;
+      let detectedView: 'front' | 'back' | 'left' | 'right' = 'front'; // Default to front
       
       const hasNose = nose && nose.score! > minConfidence;
       const hasLeftEye = leftEye && leftEye.score! > minConfidence;
@@ -167,19 +167,19 @@ export function VirtualTryOn({ onClose }: VirtualTryOnProps) {
       const faceVisible = hasNose || hasLeftEye || hasRightEye;
 
       // Logic:
-      // 1. FRONT: If facial features are visible, it's a front view.
+      // 1. FRONT: If any facial feature is visible, we FORCE front view unless the turn is extreme.
       if (faceVisible) {
         const shoulderCenter = (leftShoulder.x + rightShoulder.x) / 2;
         const shoulderWidth = Math.abs(rightShoulder.x - leftShoulder.x);
         
         if (hasNose) {
           const noseX = nose!.x;
-          // Normalized offset (-1 to 1 based on shoulder width)
+          // Very high threshold (0.85) to prevent accidental side-switching
           const noseOffset = (noseX - shoulderCenter) / (shoulderWidth / 2);
           
-          if (noseOffset > 0.45) {
+          if (noseOffset > 0.85) {
             detectedView = 'right';
-          } else if (noseOffset < -0.45) {
+          } else if (noseOffset < -0.85) {
             detectedView = 'left';
           } else {
             detectedView = 'front';
@@ -188,15 +188,11 @@ export function VirtualTryOn({ onClose }: VirtualTryOnProps) {
           detectedView = 'front';
         }
       } 
-      // 2. BACK/PROFILE: Face is not visible
+      // 2. BACK/PROFILE: Face is not visible at all
       else {
-        // BlazePose provides z-axis. If we don't have facial features, check z-depth.
-        // For 2D fallback: If no face features are seen, it's likely BACK unless one shoulder is much higher than other (side)
         const shoulderDiff = Math.abs(leftShoulder.x - rightShoulder.x);
-        const hipDiff = (leftHip && rightHip) ? Math.abs(leftHip.x - rightHip.x) : 100;
-        
-        if (shoulderDiff < 50 || hipDiff < 50) {
-           // Body is turned narrow
+        // If the body is very "thin" in the frame, it's a profile
+        if (shoulderDiff < 60) {
            detectedView = (leftShoulder.x < rightShoulder.x) ? 'left' : 'right';
         } else {
            detectedView = 'back';
