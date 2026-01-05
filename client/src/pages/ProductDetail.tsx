@@ -53,7 +53,7 @@ export default function ProductDetail() {
     product.images?.back,
     product.images?.left,
     product.images?.right
-  ].filter(Boolean);
+  ].filter(Boolean) as string[];
 
   const getViewLabel = (idx: number) => {
     const labels = ["Front View", "Back View", "Left Side", "Right Side"];
@@ -69,7 +69,7 @@ export default function ProductDetail() {
         {isVTOOpen && (
           <VirtualTryOn 
             onClose={() => setIsVTOOpen(false)} 
-            productImage={images[0]}
+            productImage={images[0] || ""}
           />
         )}
       </AnimatePresence>
@@ -84,11 +84,13 @@ export default function ProductDetail() {
               animate={{ opacity: 1 }}
               className="aspect-[3/4] bg-neutral-900 rounded-lg overflow-hidden relative group"
             >
-              <img 
-                src={images[activeImage]} 
-                alt={product.name} 
-                className="w-full h-full object-cover"
-              />
+              {images[activeImage] && (
+                <img 
+                  src={images[activeImage]} 
+                  alt={product.name} 
+                  className="w-full h-full object-cover"
+                />
+              )}
               
               {/* Floating VTO Trigger */}
               <button
@@ -160,7 +162,7 @@ export default function ProductDetail() {
                   <button className="text-sm text-neutral-400 underline hover:text-white">Size Guide</button>
                 </div>
                 <div className="flex gap-3">
-                  {product.sizes?.map((size) => (
+                  {(product.sizes as string[])?.map((size) => (
                     <button
                       key={size}
                       onClick={() => setSelectedSize(size)}
@@ -188,7 +190,7 @@ export default function ProductDetail() {
               <div className="border-t border-white/10 pt-8">
                 <h3 className="text-sm font-bold text-white uppercase mb-4">Highlights</h3>
                 <ul className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                  {product.features?.map((feature, i) => (
+                  {(product.features as string[])?.map((feature, i) => (
                     <li key={i} className="flex items-center text-neutral-400 text-sm">
                       <Check className="w-4 h-4 text-primary mr-3" />
                       {feature}
