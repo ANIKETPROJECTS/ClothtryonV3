@@ -17,7 +17,6 @@ export default function ProductDetail() {
   // Use the actual product data from the hook
   const { data: fetchedProduct } = useProduct(Number(id));
   
-  // Use product images if available, otherwise fallback to mock for demo
   const product = fetchedProduct || {
     id: 1,
     name: TSHIRT_CONFIG.name,
@@ -34,10 +33,10 @@ export default function ProductDetail() {
   };
 
   const images = [
-    product.images.front,
-    product.images.back,
-    product.images.left,
-    product.images.right
+    product.images?.front,
+    product.images?.back,
+    product.images?.left,
+    product.images?.right
   ].filter(Boolean);
 
   const getViewLabel = (idx: number) => {
@@ -145,7 +144,7 @@ export default function ProductDetail() {
                   <button className="text-sm text-neutral-400 underline hover:text-white">Size Guide</button>
                 </div>
                 <div className="flex gap-3">
-                  {product.sizes.map((size) => (
+                  {product.sizes?.map((size) => (
                     <button
                       key={size}
                       onClick={() => setSelectedSize(size)}
@@ -173,7 +172,7 @@ export default function ProductDetail() {
               <div className="border-t border-white/10 pt-8">
                 <h3 className="text-sm font-bold text-white uppercase mb-4">Highlights</h3>
                 <ul className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                  {product.features.map((feature, i) => (
+                  {product.features?.map((feature, i) => (
                     <li key={i} className="flex items-center text-neutral-400 text-sm">
                       <Check className="w-4 h-4 text-primary mr-3" />
                       {feature}
