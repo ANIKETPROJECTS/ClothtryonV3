@@ -45,10 +45,10 @@ async function seedDatabase() {
         price: 2499, // ₹2,499
         sku: "ONYU-TEE-001",
         images: {
-          front: "/src/assets/generated_images/premium_black_t-shirt_front_view.png",
-          back: "/src/assets/generated_images/premium_black_t-shirt_back_view.png",
-          left: "/src/assets/generated_images/premium_black_t-shirt_left_side_view.png",
-          right: "/src/assets/generated_images/premium_black_t-shirt_right_side_view.png"
+          front: "/src/assets/generated_images/signature_onyu_black_t-shirt_front_view_(no_background).png",
+          back: "/src/assets/generated_images/signature_onyu_black_t-shirt_back_view_(no_background).png",
+          left: "/src/assets/generated_images/signature_onyu_black_t-shirt_left_side_view_(no_background).png",
+          right: "/src/assets/generated_images/signature_onyu_black_t-shirt_right_side_view_(no_background).png"
         },
         features: [
           "240GSM Heavyweight Cotton",
