@@ -150,7 +150,7 @@ export function VirtualTryOn({ onClose }: VirtualTryOnProps) {
     const rightEar = keypoints.find((k) => k.name === "right_ear");
 
     // Only draw if we have high confidence in keypoints
-    const minConfidence = 0.4;
+    const minConfidence = 0.25; // Lower confidence to be more forgiving in low light
     if (
       leftShoulder && leftShoulder.score! > minConfidence &&
       rightShoulder && rightShoulder.score! > minConfidence &&
@@ -158,7 +158,7 @@ export function VirtualTryOn({ onClose }: VirtualTryOnProps) {
       rightHip && rightHip.score! > minConfidence
     ) {
       // Determine Orientation automatically with refined logic
-      let detectedView: 'front' | 'back' | 'left' | 'right' = 'front';
+      let detectedView: 'front' | 'back' | 'left' | 'right' = currentView;
       
       const hasNose = nose && nose.score! > minConfidence;
       const hasLeftEye = leftEye && leftEye.score! > minConfidence;
@@ -166,36 +166,38 @@ export function VirtualTryOn({ onClose }: VirtualTryOnProps) {
       const hasLeftEar = leftEar && leftEar.score! > minConfidence;
       const hasRightEar = rightEar && rightEar.score! > minConfidence;
       
-      const facePointsCount = [hasNose, hasLeftEye, hasRightEye].filter(Boolean).length;
-      const earPointsCount = [hasLeftEar, hasRightEar].filter(Boolean).length;
+      const faceVisible = hasNose || hasLeftEye || hasRightEye;
 
       // Logic:
-      // 1. If we see eyes or nose clearly, it's NOT the back.
-      if (facePointsCount >= 1) {
+      // 1. FRONT: Face is visible and nose is relatively centered between shoulders
+      if (faceVisible) {
         const shoulderCenter = (leftShoulder.x + rightShoulder.x) / 2;
         const shoulderWidth = Math.abs(rightShoulder.x - leftShoulder.x);
         
         if (hasNose) {
           const noseX = nose!.x;
+          // Use a very high threshold for profile to favor front view
           const noseOffset = (noseX - shoulderCenter) / (shoulderWidth / 2);
           
-          // Use a narrower range for front to allow easier switching
-          if (noseOffset > 0.4) detectedView = 'right';
-          else if (noseOffset < -0.4) detectedView = 'left';
-          else detectedView = 'front';
+          if (noseOffset > 0.8) {
+            detectedView = 'right';
+          } else if (noseOffset < -0.8) {
+            detectedView = 'left';
+          } else {
+            detectedView = 'front';
+          }
         } else {
           detectedView = 'front';
         }
       } 
-      // 2. If no face points but we see one ear significantly better than the other, it's a side profile.
-      else if (earPointsCount === 1) {
-        detectedView = hasLeftEar ? 'left' : 'right';
+      // 2. PROFILE: One ear is visible but face is not clearly detected
+      else if (hasLeftEar && !hasRightEar) {
+        detectedView = 'left';
       }
-      // 3. If we see both ears but no face points, it's likely the back.
-      else if (earPointsCount === 2) {
-        detectedView = 'back';
+      else if (hasRightEar && !hasLeftEar) {
+        detectedView = 'right';
       }
-      // 4. Default to back if nothing is visible.
+      // 3. BACK: Neither face nor single ear profile
       else {
         detectedView = 'back';
       }
@@ -271,7 +273,8 @@ export function VirtualTryOn({ onClose }: VirtualTryOnProps) {
   };
 
   /* Helper to visualize tracking (optional debug) */
-  const drawSkeleton = (ctx: CanvasRenderingContext2D, keypoints: Keypoint[]) => {
+  const drawSkeleton = (ctx: CanvasRenderingContext2D | null, keypoints: Keypoint[]) => {
+     if (!ctx) return;
      ctx.fillStyle = "red";
      keypoints.forEach(k => {
        if((k.score || 0) > 0.3) {
@@ -294,11 +297,13 @@ export function VirtualTryOn({ onClose }: VirtualTryOnProps) {
         // Draw video frame
         ctx.drawImage(webcamRef.current.video, 0, 0, tempCanvas.width, tempCanvas.height);
         // Draw overlay
-        ctx.drawImage(canvasRef.current, 0, 0);
+        if (canvasRef.current) {
+          ctx.drawImage(canvasRef.current, 0, 0);
+        }
         
         // Download
         const link = document.createElement('a');
-        link.download = `luxe-vto-${Date.now()}.png`;
+        link.download = `onyu-vto-${Date.now()}.png`;
         link.href = tempCanvas.toDataURL();
         link.click();
       }
