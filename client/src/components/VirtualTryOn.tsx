@@ -32,19 +32,18 @@ export function VirtualTryOn({ onClose }: VirtualTryOnProps) {
     const loadModel = async () => {
       try {
         await tf.ready();
-        const detectorConfig: poseDetection.BlazePoseTfjsModelConfig = {
-          runtime: 'tfjs',
-          enableSmoothing: true,
-          modelType: 'full'
+        const detectorConfig: poseDetection.MoveNetModelConfig = {
+          modelType: poseDetection.movenet.modelType.SINGLEPOSE_LIGHTNING,
+          enableSmoothing: true
         };
         const detector = await poseDetection.createDetector(
-          poseDetection.SupportedModels.BlazePose,
+          poseDetection.SupportedModels.MoveNet,
           detectorConfig
         );
         setModel(detector);
         setIsLoading(false);
       } catch (err) {
-        console.error("Failed to load MoveNet model:", err);
+        console.error("Failed to load pose model:", err);
         setError("Failed to initialize VTO engine. Please try again.");
         setIsLoading(false);
       }
@@ -151,7 +150,7 @@ export function VirtualTryOn({ onClose }: VirtualTryOnProps) {
     const rightEar = keypoints.find((k) => k.name === "right_ear");
 
     // Only draw if we have high confidence in keypoints
-    const minConfidence = 0.5;
+    const minConfidence = 0.3;
     if (
       leftShoulder && leftShoulder.score! > minConfidence &&
       rightShoulder && rightShoulder.score! > minConfidence &&
@@ -164,22 +163,27 @@ export function VirtualTryOn({ onClose }: VirtualTryOnProps) {
       const hasNose = nose && nose.score! > minConfidence;
       const hasLeftEye = leftEye && leftEye.score! > minConfidence;
       const hasRightEye = rightEye && rightEye.score! > minConfidence;
-      const hasFace = hasNose || hasLeftEye || hasRightEye;
+      const hasLeftEar = leftEar && leftEar.score! > minConfidence;
+      const hasRightEar = rightEar && rightEar.score! > minConfidence;
+      
+      const facePoints = [hasNose, hasLeftEye, hasRightEye, hasLeftEar, hasRightEar].filter(Boolean).length;
 
-      if (!hasFace) {
+      if (facePoints < 2) {
         detectedView = 'back';
       } else {
         // Face is visible, determine if it's front or profile
         const shoulderCenter = (leftShoulder.x + rightShoulder.x) / 2;
         const shoulderWidth = Math.abs(rightShoulder.x - leftShoulder.x);
         
-        // Use nose relative to shoulders to detect profile
-        if (hasNose) {
+        // Profiles usually have one ear much more confident/visible than the other
+        if (hasLeftEar && !hasRightEar) detectedView = 'left';
+        else if (hasRightEar && !hasLeftEar) detectedView = 'right';
+        else if (hasNose) {
           const noseX = nose!.x;
           const relativePos = (noseX - shoulderCenter) / (shoulderWidth / 2);
           
-          if (relativePos > 0.4) detectedView = 'right';
-          else if (relativePos < -0.4) detectedView = 'left';
+          if (relativePos > 0.35) detectedView = 'right';
+          else if (relativePos < -0.35) detectedView = 'left';
           else detectedView = 'front';
         } else {
           detectedView = 'front';
