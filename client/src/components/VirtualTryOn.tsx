@@ -106,7 +106,7 @@ export function VirtualTryOn({ onClose }: VirtualTryOnProps) {
         setMetrics(prev => ({ ...prev, fps: Math.round(fps), confidence: 0 }));
       }
     }
-  }, [model]);
+  }, [model, currentView]);
 
   // Request Animation Frame Loop
   useEffect(() => {
@@ -179,9 +179,12 @@ export function VirtualTryOn({ onClose }: VirtualTryOnProps) {
           const noseX = nose!.x;
           const noseOffset = (noseX - shoulderCenter) / (shoulderWidth / 2);
           
-          // Use a narrower range for front to allow easier switching
-          if (noseOffset > 0.4) detectedView = 'right';
-          else if (noseOffset < -0.4) detectedView = 'left';
+          // Debugging log (internal)
+          // console.log("Nose Offset:", noseOffset);
+
+          // Use a MUCH wider range for front to avoid accidental profile switching
+          if (noseOffset > 0.6) detectedView = 'right';
+          else if (noseOffset < -0.6) detectedView = 'left';
           else detectedView = 'front';
         } else {
           detectedView = 'front';
@@ -204,6 +207,9 @@ export function VirtualTryOn({ onClose }: VirtualTryOnProps) {
       if (detectedView !== currentView) {
         setCurrentView(detectedView);
       }
+
+      // Draw tracking lines (Green lines for shoulders and torso)
+      drawTrackingOverlay(ctx, keypoints);
 
       // Calculate torso center and dimensions
       const shoulderCenterX = (leftShoulder.x + rightShoulder.x) / 2;
@@ -270,17 +276,38 @@ export function VirtualTryOn({ onClose }: VirtualTryOnProps) {
     }
   };
 
-  /* Helper to visualize tracking (optional debug) */
-  const drawSkeleton = (ctx: CanvasRenderingContext2D, keypoints: Keypoint[]) => {
-     ctx.fillStyle = "red";
-     keypoints.forEach(k => {
-       if((k.score || 0) > 0.3) {
-         ctx.beginPath();
-         ctx.arc(k.x, k.y, 5, 0, 2 * Math.PI);
-         ctx.fill();
-       }
-     });
-  }
+  /* Helper to visualize tracking */
+  const drawTrackingOverlay = (ctx: CanvasRenderingContext2D, keypoints: Keypoint[]) => {
+    const leftShoulder = keypoints.find((k) => k.name === "left_shoulder");
+    const rightShoulder = keypoints.find((k) => k.name === "right_shoulder");
+    const leftHip = keypoints.find((k) => k.name === "left_hip");
+    const rightHip = keypoints.find((k) => k.name === "right_hip");
+
+    ctx.strokeStyle = "#00FF00"; // Bright Green
+    ctx.lineWidth = 3;
+    ctx.lineCap = "round";
+
+    // Draw Shoulder Line
+    if (leftShoulder && rightShoulder && leftShoulder.score! > 0.3 && rightShoulder.score! > 0.3) {
+      ctx.beginPath();
+      ctx.moveTo(leftShoulder.x, leftShoulder.y);
+      ctx.lineTo(rightShoulder.x, rightShoulder.y);
+      ctx.stroke();
+    }
+
+    // Draw Torso Box
+    if (leftShoulder && rightShoulder && leftHip && rightHip && 
+        leftShoulder.score! > 0.3 && rightShoulder.score! > 0.3 && 
+        leftHip.score! > 0.3 && rightHip.score! > 0.3) {
+      ctx.beginPath();
+      ctx.moveTo(leftShoulder.x, leftShoulder.y);
+      ctx.lineTo(leftHip.x, leftHip.y);
+      ctx.lineTo(rightHip.x, rightHip.y);
+      ctx.lineTo(rightShoulder.x, rightShoulder.y);
+      ctx.closePath();
+      ctx.stroke();
+    }
+  };
 
   const capturePhoto = () => {
     if (canvasRef.current && webcamRef.current) {
