@@ -169,6 +169,7 @@ export function VirtualTryOn({ onClose }: VirtualTryOnProps) {
       const facePoints = [hasNose, hasLeftEye, hasRightEye, hasLeftEar, hasRightEar].filter(Boolean).length;
 
       if (facePoints < 2) {
+        // Very few face points, likely back view
         detectedView = 'back';
       } else {
         // Face is visible, determine if it's front or profile
@@ -176,15 +177,26 @@ export function VirtualTryOn({ onClose }: VirtualTryOnProps) {
         const shoulderWidth = Math.abs(rightShoulder.x - leftShoulder.x);
         
         // Profiles usually have one ear much more confident/visible than the other
-        if (hasLeftEar && !hasRightEar) detectedView = 'left';
-        else if (hasRightEar && !hasLeftEar) detectedView = 'right';
-        else if (hasNose) {
+        // and the nose is significantly offset from the shoulder center
+        const leftSideVisible = hasLeftEar || (leftEye && leftEye.score! > minConfidence);
+        const rightSideVisible = hasRightEar || (rightEye && rightEye.score! > minConfidence);
+
+        if (hasNose) {
           const noseX = nose!.x;
-          const relativePos = (noseX - shoulderCenter) / (shoulderWidth / 2);
+          const noseOffset = (noseX - shoulderCenter) / (shoulderWidth / 2);
           
-          if (relativePos > 0.35) detectedView = 'right';
-          else if (relativePos < -0.35) detectedView = 'left';
-          else detectedView = 'front';
+          // Refined thresholds for smoother switching
+          if (noseOffset > 0.35) {
+            detectedView = 'right';
+          } else if (noseOffset < -0.35) {
+            detectedView = 'left';
+          } else {
+            detectedView = 'front';
+          }
+        } else if (leftSideVisible && !rightSideVisible) {
+          detectedView = 'left';
+        } else if (rightSideVisible && !leftSideVisible) {
+          detectedView = 'right';
         } else {
           detectedView = 'front';
         }
