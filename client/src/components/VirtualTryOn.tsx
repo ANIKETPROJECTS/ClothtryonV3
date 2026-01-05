@@ -175,25 +175,33 @@ export function VirtualTryOn({ onClose }: VirtualTryOnProps) {
         
         if (hasNose) {
           const noseX = nose!.x;
+          // Normalized offset (-1 to 1 based on shoulder width)
           const noseOffset = (noseX - shoulderCenter) / (shoulderWidth / 2);
           
-          if (noseOffset > 0.4) {
+          // Debugging log (internal)
+          // console.log("Nose Offset:", noseOffset);
+
+          if (noseOffset > 0.45) {
             detectedView = 'right';
-          } else if (noseOffset < -0.4) {
+          } else if (noseOffset < -0.45) {
             detectedView = 'left';
           } else {
             detectedView = 'front';
           }
         } else {
+          // If no nose but face points exist, likely front
           detectedView = 'front';
         }
       } else {
-        // Face not detected, check if it's back or profile via ears
+        // Face not detected
+        // Profiles can sometimes only show ears.
+        // If one ear is much stronger than the other, it's a profile
         if (hasLeftEar && !hasRightEar) {
           detectedView = 'left';
         } else if (hasRightEar && !hasLeftEar) {
           detectedView = 'right';
         } else {
+          // No face points and no single-ear profile detected -> back view
           detectedView = 'back';
         }
       }
