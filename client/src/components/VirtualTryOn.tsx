@@ -117,7 +117,8 @@ export function VirtualTryOn({ onClose }: VirtualTryOnProps) {
   }, [detect, isLoading, model]);
 
   // Drawing Logic
-  const drawCanvas = (pose: Pose, width: number, height: number, canvas: HTMLCanvasElement) => {
+  const drawCanvas = (pose: Pose, width: number, height: number, canvas: HTMLCanvasElement | null) => {
+    if (!canvas) return;
     const ctx = canvas.getContext("2d");
     if (!ctx) return;
 

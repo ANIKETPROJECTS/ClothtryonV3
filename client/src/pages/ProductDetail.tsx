@@ -8,6 +8,22 @@ import { useProduct } from "@/hooks/use-products";
 import { TSHIRT_CONFIG } from "@/lib/tshirt-config";
 import { formatPrice } from "@/lib/utils";
 
+interface Product {
+  id: number;
+  name: string;
+  price: number;
+  description: string;
+  images: {
+    front: string;
+    back: string;
+    left: string;
+    right: string;
+    [key: string]: string;
+  };
+  sizes: string[];
+  features: string[];
+}
+
 export default function ProductDetail() {
   const { id } = useParams();
   const [isVTOOpen, setIsVTOOpen] = useState(false);
@@ -17,7 +33,7 @@ export default function ProductDetail() {
   // Use the actual product data from the hook
   const { data: fetchedProduct } = useProduct(Number(id));
   
-  const product = fetchedProduct || {
+  const product = (fetchedProduct as Product) || {
     id: 1,
     name: TSHIRT_CONFIG.name,
     price: TSHIRT_CONFIG.price,
