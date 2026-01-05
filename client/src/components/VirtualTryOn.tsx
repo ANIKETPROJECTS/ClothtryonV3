@@ -32,14 +32,12 @@ export function VirtualTryOn({ onClose }: VirtualTryOnProps) {
     const loadModel = async () => {
       try {
         await tf.ready();
-        // Switching to BlazePose for better 3D keypoints (z-axis)
-        const detectorConfig: poseDetection.BlazePoseTfjsModelConfig = {
-          runtime: 'tfjs',
-          modelType: 'full',
+        const detectorConfig: poseDetection.MoveNetModelConfig = {
+          modelType: poseDetection.movenet.modelType.SINGLEPOSE_LIGHTNING,
           enableSmoothing: true
         };
         const detector = await poseDetection.createDetector(
-          poseDetection.SupportedModels.BlazePose,
+          poseDetection.SupportedModels.MoveNet,
           detectorConfig
         );
         setModel(detector);
@@ -152,51 +150,54 @@ export function VirtualTryOn({ onClose }: VirtualTryOnProps) {
     const rightEar = keypoints.find((k) => k.name === "right_ear");
 
     // Only draw if we have high confidence in keypoints
-    const minConfidence = 0.2; // Even lower to catch features in darker environments
+    const minConfidence = 0.4;
     if (
       leftShoulder && leftShoulder.score! > minConfidence &&
-      rightShoulder && rightShoulder.score! > minConfidence
+      rightShoulder && rightShoulder.score! > minConfidence &&
+      leftHip && leftHip.score! > minConfidence &&
+      rightHip && rightHip.score! > minConfidence
     ) {
       // Determine Orientation automatically with refined logic
-      let detectedView: 'front' | 'back' | 'left' | 'right' = 'front'; // Default to front
+      let detectedView: 'front' | 'back' | 'left' | 'right' = 'front';
       
       const hasNose = nose && nose.score! > minConfidence;
       const hasLeftEye = leftEye && leftEye.score! > minConfidence;
       const hasRightEye = rightEye && rightEye.score! > minConfidence;
+      const hasLeftEar = leftEar && leftEar.score! > minConfidence;
+      const hasRightEar = rightEar && rightEar.score! > minConfidence;
       
-      const faceVisible = hasNose || hasLeftEye || hasRightEye;
+      const facePointsCount = [hasNose, hasLeftEye, hasRightEye].filter(Boolean).length;
+      const earPointsCount = [hasLeftEar, hasRightEar].filter(Boolean).length;
 
       // Logic:
-      // 1. FRONT: If any facial feature is visible, we FORCE front view unless the turn is extreme.
-      if (faceVisible) {
+      // 1. If we see eyes or nose clearly, it's NOT the back.
+      if (facePointsCount >= 1) {
         const shoulderCenter = (leftShoulder.x + rightShoulder.x) / 2;
         const shoulderWidth = Math.abs(rightShoulder.x - leftShoulder.x);
         
         if (hasNose) {
           const noseX = nose!.x;
-          // Very high threshold (0.85) to prevent accidental side-switching
           const noseOffset = (noseX - shoulderCenter) / (shoulderWidth / 2);
           
-          if (noseOffset > 0.85) {
-            detectedView = 'right';
-          } else if (noseOffset < -0.85) {
-            detectedView = 'left';
-          } else {
-            detectedView = 'front';
-          }
+          // Use a narrower range for front to allow easier switching
+          if (noseOffset > 0.4) detectedView = 'right';
+          else if (noseOffset < -0.4) detectedView = 'left';
+          else detectedView = 'front';
         } else {
           detectedView = 'front';
         }
       } 
-      // 2. BACK/PROFILE: Face is not visible at all
+      // 2. If no face points but we see one ear significantly better than the other, it's a side profile.
+      else if (earPointsCount === 1) {
+        detectedView = hasLeftEar ? 'left' : 'right';
+      }
+      // 3. If we see both ears but no face points, it's likely the back.
+      else if (earPointsCount === 2) {
+        detectedView = 'back';
+      }
+      // 4. Default to back if nothing is visible.
       else {
-        const shoulderDiff = Math.abs(leftShoulder.x - rightShoulder.x);
-        // If the body is very "thin" in the frame, it's a profile
-        if (shoulderDiff < 60) {
-           detectedView = (leftShoulder.x < rightShoulder.x) ? 'left' : 'right';
-        } else {
-           detectedView = 'back';
-        }
+        detectedView = 'back';
       }
 
       // Update current view if it changed
@@ -238,7 +239,7 @@ export function VirtualTryOn({ onClose }: VirtualTryOnProps) {
       // Select Image
       const shirtImg = shirtImages.current[currentView];
 
-      if (shirtImg) {
+      if (shirtImg && false) {
         ctx.save();
         
         // Move to center of torso (approximate anchor point)
@@ -270,8 +271,7 @@ export function VirtualTryOn({ onClose }: VirtualTryOnProps) {
   };
 
   /* Helper to visualize tracking (optional debug) */
-  const drawSkeleton = (ctx: CanvasRenderingContext2D | null, keypoints: Keypoint[]) => {
-     if (!ctx) return;
+  const drawSkeleton = (ctx: CanvasRenderingContext2D, keypoints: Keypoint[]) => {
      ctx.fillStyle = "red";
      keypoints.forEach(k => {
        if((k.score || 0) > 0.3) {
@@ -294,13 +294,11 @@ export function VirtualTryOn({ onClose }: VirtualTryOnProps) {
         // Draw video frame
         ctx.drawImage(webcamRef.current.video, 0, 0, tempCanvas.width, tempCanvas.height);
         // Draw overlay
-        if (canvasRef.current) {
-          ctx.drawImage(canvasRef.current, 0, 0);
-        }
+        ctx.drawImage(canvasRef.current, 0, 0);
         
         // Download
         const link = document.createElement('a');
-        link.download = `onyu-vto-${Date.now()}.png`;
+        link.download = `luxe-vto-${Date.now()}.png`;
         link.href = tempCanvas.toDataURL();
         link.click();
       }
